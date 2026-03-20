@@ -1,0 +1,28 @@
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+case-api:
+  base-url: https://my1002287.us1.test.crm.cloud.sap
+  username: SERVICECLOUD_CASE_USER
+  password: SCv2CASEapiUSER2026SecurePASS!!9845
+
+close:
+  enabled: true
+  fixed-delay-ms: 30000
+  page-size: 200
+  max-pages: 50
+
+  disposition-field: Disposition
+
+  status-schema: "01"
+  status-solved: "Z5"
+  status-closed: "06"
+
+  lifecycle-open: "OPEN"
+  lifecycle-completed: "COMPLETED"

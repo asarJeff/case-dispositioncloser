@@ -1,0 +1,25 @@
+applications:
+  - name: case-disposition-closer
+    memory: 1024M
+    instances: 1
+    path: target/case-dispositioncloser-0.0.1-SNAPSHOT.jar
+    routes:
+      - route: case-disposition-closer.cfapps.us10-001.hana.ondemand.com
+    env:
+      JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 17.+ } }'
+      CASE_API_BASE_URL: "https://my1002287.us1.test.crm.cloud.sap"
+      CASE_API_USERNAME: "SERVICECLOUD_CASE_USER"
+      CASE_API_PASSWORD: "SCv2CASEapiUSER2026SecurePASS!!9845"
+
+      CLOSE_ENABLED: "true"
+      CLOSE_FIXED_DELAY_MS: "30000"
+      CLOSE_PAGE_SIZE: "200"
+      CLOSE_MAX_PAGES: "50"
+      CLOSE_DISPOSITION_FIELD: "Disposition"
+
+      CLOSE_STATUS_SCHEMA: "01"
+      CLOSE_STATUS_SOLVED: "Z5"
+      CLOSE_STATUS_CLOSED: "06"
+
+      CLOSE_LIFECYCLE_OPEN: "OPEN"
+      CLOSE_LIFECYCLE_COMPLETED: "COMPLETED"

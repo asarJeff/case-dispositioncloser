@@ -1,0 +1,4 @@
+com\asar\casedispositioncloser\service\CaseDispositionCloseService.class
+com\asar\casedispositioncloser\CaseDispositionCloserApplication.class
+com\asar\casedispositioncloser\web\AdminController.class
+com\asar\casedispositioncloser\api\CaseApiClient.class

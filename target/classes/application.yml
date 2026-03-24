@@ -8,7 +8,7 @@ management:
         include: health,info
 
 case-api:
-  base-url: https://my1002287.us1.test.crm.cloud.sap
+  base-url: https://my1002247.us1.crm.cloud.sap/
   username: SERVICECLOUD_CASE_USER
   password: SCv2CASEapiUSER2026SecurePASS!!9845
 

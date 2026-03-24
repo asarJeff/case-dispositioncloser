@@ -7,7 +7,7 @@ applications:
       - route: case-disposition-closer.cfapps.us10-001.hana.ondemand.com
     env:
       JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 17.+ } }'
-      CASE_API_BASE_URL: "https://my1002287.us1.test.crm.cloud.sap"
+      CASE_API_BASE_URL: "https://my1002247.us1.crm.cloud.sap/"
       CASE_API_USERNAME: "SERVICECLOUD_CASE_USER"
       CASE_API_PASSWORD: "SCv2CASEapiUSER2026SecurePASS!!9845"
 

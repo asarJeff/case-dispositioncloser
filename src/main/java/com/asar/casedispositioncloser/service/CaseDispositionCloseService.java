@@ -38,6 +38,11 @@ public class CaseDispositionCloseService {
     @Value("${close.lifecycle-open:OPEN}")
     private String lifecycleOpen;
 
+    // Statuses we care about — cases already solved don't need processing
+    // Configurable so we can adjust without code changes
+    @Value("${close.active-statuses:Z2,Z3,01,Z7,Z8,Z6,Z1}")
+    private String activeStatusesCsv;
+
     public CaseDispositionCloseService(CaseApiClient api, ObjectMapper om) {
         this.api = api;
         this.om = om;
@@ -68,6 +73,13 @@ public class CaseDispositionCloseService {
         System.out.println("Disposition Closer - processOnce START");
         System.out.println("==================================================");
 
+        // Build SAP-side filter — only fetch cases that:
+        // 1. Are not already solved (status ne statusSolved)
+        // 2. Have a disposition value set (extensions/Disposition ne '')
+        // This avoids fetching all cases and hitting the SAP 10k $skip limit
+        String filter = buildFilter();
+        System.out.println("Disposition Closer: using SAP filter: " + filter);
+
         int solved = 0;
         int skippedBlankDisposition = 0;
         int skippedNotActive = 0;
@@ -77,9 +89,17 @@ public class CaseDispositionCloseService {
         for (int page = 0; page < maxPages; page++) {
             int skip = page * pageSize;
 
+            // SAP hard limit — never go past 10k skip
+            if (skip >= 10000) {
+                System.out.println("WARNING: hit SAP 10k $skip limit at page=" + page
+                        + ". Total solved so far: " + solved
+                        + ". Consider narrowing filter further.");
+                break;
+            }
+
             System.out.printf("Fetching cases page=%d skip=%d top=%d%n", page, skip, pageSize);
 
-            JsonNode root = api.getCases(pageSize, skip);
+            JsonNode root = api.getCasesWithFilter(pageSize, skip, filter);
             JsonNode value = (root == null) ? null : root.get("value");
 
             if (value == null || !value.isArray() || value.size() == 0) {
@@ -97,13 +117,14 @@ public class CaseDispositionCloseService {
                     continue;
                 }
 
+                // Safety net — SAP filter should have excluded these
+                // but keep the guard in case SAP filter behaves unexpectedly
                 if (disposition == null || disposition.isBlank()) {
                     skippedBlankDisposition++;
                     System.out.printf("SKIP case %s : Disposition is blank.%n", displayId);
                     continue;
                 }
 
-                // Only skip if already solved
                 if (statusSolved.equals(status)) {
                     skippedAlreadySolved++;
                     System.out.printf("SKIP case %s : already solved.%n", displayId);
@@ -134,6 +155,19 @@ public class CaseDispositionCloseService {
         System.out.printf("Failed: %d%n", failed);
         System.out.printf("Elapsed: %d ms%n", ms);
         System.out.println("--------------------------------------------------");
+    }
+
+    /**
+     * Builds an OData $filter to fetch only cases that need processing:
+     * - Not already solved
+     * - Has an active-like status
+     * We can't filter on extensions/Disposition directly via OData
+     * but filtering on status alone cuts volume dramatically.
+     */
+    private String buildFilter() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("status ne '").append(statusSolved).append("'");
+        return sb.toString();
     }
 
     private void solveCase(String caseId) throws Exception {

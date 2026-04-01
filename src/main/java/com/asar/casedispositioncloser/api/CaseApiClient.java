@@ -24,17 +24,39 @@ public class CaseApiClient {
                 .build();
     }
 
+    /**
+     * Original method kept for backwards compatibility.
+     * Fetches all cases without filtering — avoid using this directly
+     * as it will hit SAP's 10k $skip limit when case volume is high.
+     */
     public JsonNode getCases(int top, int skip) {
-        String uri = "/sap/c4c/api/v1/case-service/cases"
-                + "?$top=" + top
-                + "&$skip=" + skip
-                + "&$select=id,displayId,status,statusSchema,lifeCycleStatus,extensions,adminData";
+        return getCasesWithFilter(top, skip, null);
+    }
+
+    /**
+     * Fetches cases with an optional OData $filter applied at the SAP level.
+     * Use this instead of getCases() to avoid fetching all cases and
+     * hitting SAP's hard 10k $skip pagination limit.
+     *
+     * @param top    page size
+     * @param skip   offset
+     * @param filter OData filter string e.g. "status ne 'Z5'" — pass null for no filter
+     */
+    public JsonNode getCasesWithFilter(int top, int skip, String filter) {
+        StringBuilder uri = new StringBuilder("/sap/c4c/api/v1/case-service/cases")
+                .append("?$top=").append(top)
+                .append("&$skip=").append(skip)
+                .append("&$select=id,displayId,status,statusSchema,lifeCycleStatus,extensions,adminData");
+
+        if (filter != null && !filter.isBlank()) {
+            uri.append("&$filter=").append(filter);
+        }
 
         try {
             System.out.println("GET " + uri);
 
             return client.get()
-                    .uri(uri)
+                    .uri(uri.toString())
                     .accept(MediaType.APPLICATION_JSON)
                     .retrieve()
                     .bodyToMono(JsonNode.class)
